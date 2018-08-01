@@ -1,0 +1,47 @@
+{
+  "name": "whalesRebuild",
+  "version": "1.0.0",
+  "repository": "github.com/yfei1/whalesRebuild",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "client-dev": "webpack-dev-server --config webpack.dev.js --mode development",
+    "client-build": "webpack --config webpack.prod.js --mode production",
+    "server-dev": "npx nodemon ./server/index.js",
+    "server-build": "node ./server/index.js",
+    "dev": "concurrently --kill-others-on-fail \"npm:client-dev\" \"npm:server-dev\"",
+    "build": "npm run client-build & npm run server-build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/cli": "^7.0.0-beta.54",
+    "@babel/core": "^7.0.0-beta.54",
+    "@babel/plugin-proposal-object-rest-spread": "^7.0.0-beta.55",
+    "@babel/plugin-transform-arrow-functions": "^7.0.0-beta.55",
+    "@babel/plugin-transform-template-literals": "^7.0.0-beta.55",
+    "@babel/preset-env": "^7.0.0-beta.54",
+    "@babel/preset-react": "^7.0.0-beta.54",
+    "babel-loader": "^8.0.0-beta.4",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb": "^17.0.0",
+    "eslint-plugin-import": "^2.13.0",
+    "eslint-plugin-jsx-a11y": "^6.1.1",
+    "eslint-plugin-react": "^7.10.0",
+    "webpack-cli": "^3.1.0",
+    "webpack-dev-server": "^3.1.5"
+  },
+  "dependencies": {
+    "concurrently": "^3.6.1",
+    "lodash": "^4.17.10",
+    "nodemon": "^1.18.3",
+    "react": "^16.4.1",
+    "react-dom": "^16.4.1",
+    "react-redux": "^5.0.7",
+    "redux": "^4.0.0",
+    "webpack": "^4.16.3",
+    "webpack-bundle-analyzer": "^2.13.1",
+    "webpack-dashboard": "^2.0.0"
+  }
+}
