@@ -1,13 +1,19 @@
 const axios = require('axios');
-const { schema, normalize } = require('normalizr');
 const _ = require('lodash');
 const { fromJS } = require('immutable');
-const { exchangesArray, transformResponse, mapExchangeToSymbolEndpoint } = require('./util/util');
+const sizeof = require('object-sizeof');
+const {
+  exchangesArray,
+  transformResponse,
+  mapExchangeToSymbolEndpoint,
+} = require('./util/util');
 
 const exchangesPromise = _
   .map(exchangesArray, value => axios.get(mapExchangeToSymbolEndpoint(value)));
 
+// Probably move the normalization part to the client?
 Promise.all(exchangesPromise).then((responses) => {
+  
   const exchangeResponseMap = _.zipObject(exchangesArray, responses);
   const data = _
     .chain(exchangeResponseMap)
@@ -15,31 +21,25 @@ Promise.all(exchangesPromise).then((responses) => {
     .flatten()
     .value();
 
-  console.log(data);
-});
+  const exchangeListSchema = _
+    .chain(data)
+    .groupBy(symbolInfo => symbolInfo.exchange)
+    .mapValues(symbolInfoList => _.map(symbolInfoList, symbolInfo => symbolInfo.id))
+    .value();
+  const baseAssetListSchema = _
+    .chain(data)
+    .groupBy(symbolInfo => symbolInfo.baseAsset)
+    .mapValues(symbolBaseList => _.chain(symbolBaseList)
+      .groupBy(symbolInfo => symbolInfo.quoteAsset)
+      .mapValues(symbolInfoList => _.map(symbolInfoList, symbolInfo => symbolInfo.id))
+      .value())
+    .value();
 
-// axios
-//   .get('https://api.binance.com/api/v1/exchangeInfo')
-//   .then((response) => {
-//     const myData = response.data.symbols;
-//     console.log(exchangeEndpoints);
-//     // const exchangeSchema = new schema.Entity('exchanges', {}, {
-//     //   idAttribute: 'symbol',
-//     //   processStrategy: (entity) => {
-//     //     const exchange = { exchange: 'BINANCE' };
-//     //     const partialEntity = lodash.pick(entity, ['symbol', 'baseAsset', 'quoteAsset']);
-//     //     return lodash.assign(exchange, partialEntity);
-//     //   },
-//     // });
-//     // const symbolSchema = new schema.Entity('symbols', {}, {
-//     //   idAttribute: 'symbol',
-//     //   processStrategy: (entity) => {
-//     //     const exchange = { exchange: 'BINANCE' };
-//     //     const partialEntity = lodash.pick(entity, ['symbol', 'baseAsset', 'quoteAsset']);
-//     //     return lodash.assign(exchange, partialEntity);
-//     //   },
-//     // });
-//     // const mySchema = [symbolSchema];
-//     // const normalizedData = normalize(myData, mySchema);
-//     // console.log(fromJS(normalizedData));
-//   });
+  const unnormalizedSchema = {
+    exchanges: exchangeListSchema,
+    bases: baseAssetListSchema,
+    symbols: data,
+  };
+  // 197kb
+  console.log(sizeof(unnormalizedSchema));
+});

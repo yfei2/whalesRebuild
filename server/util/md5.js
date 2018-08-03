@@ -61,7 +61,7 @@ function rstr2hex(input) {
   let x;
 
   // Hack... use i < input.length for full performance
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 5; i++) {
     x = input.charCodeAt(i);
     output += hexTab.charAt((x >>> 4) & 0x0F)
            + hexTab.charAt(x & 0x0F);

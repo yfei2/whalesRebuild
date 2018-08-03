@@ -1,6 +1,6 @@
 const _ = require('lodash');
-const { hexMd5 } = require('./md5');
 
+const { hexMd5 } = require('./md5');
 const CONSTANTS = require('./config');
 
 const transformBinanceResponse = (response, exchange) => _.map(
@@ -10,7 +10,6 @@ const transformBinanceResponse = (response, exchange) => _.map(
     quoteAsset: symbolInfo.quoteAsset,
     symbol: symbolInfo.symbol,
     exchange,
-    url: '',
     id: '00',
   }),
 );
@@ -22,7 +21,6 @@ const transformHuobiResponse = (response, exchange) => _.map(
     quoteAsset: symbolInfo['quote-currency'],
     symbol: symbolInfo.symbol,
     exchange,
-    url: '',
     id: '10',
   }),
 );
@@ -30,11 +28,10 @@ const transformHuobiResponse = (response, exchange) => _.map(
 const transformBitfinexResponse = (response, exchange) => _.map(
   response,
   symbolInfo => ({
-    baseAsset: symbolInfo.substr(symbolInfo.length - 3),
+    baseAsset: symbolInfo.substr(0, symbolInfo.length - 3),
     quoteAsset: symbolInfo.substr(symbolInfo.length - 3, symbolInfo.length),
     symbol: symbolInfo,
     exchange,
-    url: '',
     id: '20',
   }),
 );
@@ -42,11 +39,10 @@ const transformBitfinexResponse = (response, exchange) => _.map(
 const transformBittrexResponse = (response, exchange) => _.map(
   response.result,
   symbolInfo => ({
-    baseAsset: symbolInfo.BaseCurrency,
-    quoteAsset: symbolInfo.MarketCurrency,
+    baseAsset: symbolInfo.MarketCurrency,
+    quoteAsset: symbolInfo.BaseCurrency,
     symbol: symbolInfo.MarketName,
     exchange,
-    url: '',
     id: '30',
   }),
 );
@@ -54,23 +50,23 @@ const transformBittrexResponse = (response, exchange) => _.map(
 exports.exchangesArray = _.flatMap(CONSTANTS.EXCHANGES);
 
 exports.mapExchangeToSymbolEndpoint = (exchangeName) => {
-  const { EXCHANGES } = CONSTANTS;
+  const { EXCHANGES, SYMBOLS_ENDPOINT } = CONSTANTS;
   switch (exchangeName) {
     case EXCHANGES.BINANCE:
-      return 'https://api.binance.com/api/v1/exchangeInfo';
+      return SYMBOLS_ENDPOINT.BINANCE;
     case EXCHANGES.OKEX:
-      return 'https://www.okcoin.com/api/v1/ticker.do?symbol=btc_usd';
+      return SYMBOLS_ENDPOINT.OKEX;
     case EXCHANGES.HUOBI:
-      return 'https://api.huobi.pro/v1/common/symbols';
+      return SYMBOLS_ENDPOINT.HUOBI;
     case EXCHANGES.HADAX:
-      return 'https://api.huobi.pro/v1/hadax/common/symbols';
+      return SYMBOLS_ENDPOINT.HADAX;
     case EXCHANGES.BITFINEX:
-      return 'https://api.bitfinex.com/v1/symbols';
+      return SYMBOLS_ENDPOINT.BITFINEX;
     // Fucking bithumb is using KRW as its base currency....?????
     // case EXCHANGES.BITHUMB:
     //   return 'https://api.bithumb.com/public/orderbook/{currency}';
     case EXCHANGES.BITTREX:
-      return 'https://bittrex.com/api/v1.1/public/getmarkets';
+      return SYMBOLS_ENDPOINT.BITTREX;
     default:
       return '';
   }
@@ -115,7 +111,7 @@ exports.transformResponse = (response, exchangeName) => {
       ...symbol,
       baseAsset: _.upperCase(symbol.baseAsset),
       quoteAsset: _.upperCase(symbol.quoteAsset),
-      id: symbol.id + hexMd5(symbol.symbol + symbol.exchange),
+      id: parseInt(symbol.id + hexMd5(symbol.symbol + symbol.exchange), 16),
     }),
   );
 
