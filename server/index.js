@@ -1,11 +1,13 @@
 const axios = require('axios');
 const _ = require('lodash');
-const { fromJS } = require('immutable');
+// const { fromJS } = require('immutable');
 const sizeof = require('object-sizeof');
+
 const {
   exchangesArray,
   transformResponse,
   mapExchangeToSymbolEndpoint,
+  initOrderBookSocket,
 } = require('./util/util');
 
 const exchangesPromise = _
@@ -13,14 +15,12 @@ const exchangesPromise = _
 
 // Probably move the normalization part to the client?
 Promise.all(exchangesPromise).then((responses) => {
-  
   const exchangeResponseMap = _.zipObject(exchangesArray, responses);
   const data = _
     .chain(exchangeResponseMap)
     .map((response, exchange) => transformResponse(response.data, exchange))
     .flatten()
     .value();
-
   const exchangeListSchema = _
     .chain(data)
     .groupBy(symbolInfo => symbolInfo.exchange)
@@ -34,12 +34,14 @@ Promise.all(exchangesPromise).then((responses) => {
       .mapValues(symbolInfoList => _.map(symbolInfoList, symbolInfo => symbolInfo.id))
       .value())
     .value();
-
-  const unnormalizedSchema = {
+  const normalizedSchema = {
     exchanges: exchangeListSchema,
     bases: baseAssetListSchema,
-    symbols: data,
+    symbols: _.keyBy(data, 'id'),
   };
   // 197kb
-  console.log(sizeof(unnormalizedSchema));
+
+  _.each(exchangeListSchema, (symbolIds, exchange) => {
+    initOrderBookSocket(normalizedSchema, symbolIds, exchange);
+  });
 });

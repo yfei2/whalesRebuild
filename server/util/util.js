@@ -2,52 +2,37 @@ const _ = require('lodash');
 
 const { hexMd5 } = require('./md5');
 const CONSTANTS = require('./config');
-
-const transformBinanceResponse = (response, exchange) => _.map(
-  response.symbols,
-  symbolInfo => ({
-    baseAsset: symbolInfo.baseAsset,
-    quoteAsset: symbolInfo.quoteAsset,
-    symbol: symbolInfo.symbol,
-    exchange,
-    id: '00',
-  }),
-);
-
-const transformHuobiResponse = (response, exchange) => _.map(
-  response.data,
-  symbolInfo => ({
-    baseAsset: symbolInfo['base-currency'],
-    quoteAsset: symbolInfo['quote-currency'],
-    symbol: symbolInfo.symbol,
-    exchange,
-    id: '10',
-  }),
-);
-
-const transformBitfinexResponse = (response, exchange) => _.map(
-  response,
-  symbolInfo => ({
-    baseAsset: symbolInfo.substr(0, symbolInfo.length - 3),
-    quoteAsset: symbolInfo.substr(symbolInfo.length - 3, symbolInfo.length),
-    symbol: symbolInfo,
-    exchange,
-    id: '20',
-  }),
-);
-
-const transformBittrexResponse = (response, exchange) => _.map(
-  response.result,
-  symbolInfo => ({
-    baseAsset: symbolInfo.MarketCurrency,
-    quoteAsset: symbolInfo.BaseCurrency,
-    symbol: symbolInfo.MarketName,
-    exchange,
-    id: '30',
-  }),
-);
+const { transformBinanceResponse } = require('./exchange/binance');
+const { transformHuobiResponse } = require('./exchange/huobi');
+const { transformBittrexResponse } = require('./exchange/bittrex');
+const { transformBitfinexResponse, initBifinexOrderBook } = require('./exchange/bitfinex');
 
 exports.exchangesArray = _.flatMap(CONSTANTS.EXCHANGES);
+
+exports.initOrderBookSocket = (normalizedSchema, symbolIds, exchange) => {
+  const { EXCHANGES, DEPTH_ENDPOINT_PREFIX } = CONSTANTS;
+  const symbols = _.pick(normalizedSchema.symbols, symbolIds);
+
+  switch (exchange) {
+    case EXCHANGES.BINANCE:
+      return DEPTH_ENDPOINT_PREFIX.BINANCE;
+    case EXCHANGES.OKEX:
+      return DEPTH_ENDPOINT_PREFIX.OKEX;
+    case EXCHANGES.HUOBI:
+      return DEPTH_ENDPOINT_PREFIX.HUOBI;
+    case EXCHANGES.HADAX:
+      return DEPTH_ENDPOINT_PREFIX.HADAX;
+    case EXCHANGES.BITFINEX:
+      return initBifinexOrderBook(normalizedSchema, symbols);
+    // Fucking bithumb is using KRW as its base currency....?????
+    // case EXCHANGES.BITHUMB:
+    //   return 'https://api.bithumb.com/public/orderbook/{currency}';
+    case EXCHANGES.BITTREX:
+      return DEPTH_ENDPOINT_PREFIX.BITTREX;
+    default:
+      return '';
+  }
+};
 
 exports.mapExchangeToSymbolEndpoint = (exchangeName) => {
   const { EXCHANGES, SYMBOLS_ENDPOINT } = CONSTANTS;
