@@ -1,7 +1,7 @@
 const axios = require('axios');
 const _ = require('lodash');
 // const { fromJS } = require('immutable');
-const sizeof = require('object-sizeof');
+// const sizeof = require('object-sizeof');
 
 const {
   exchangesArray,
@@ -40,6 +40,7 @@ Promise.all(exchangesPromise).then((responses) => {
     symbols: _.keyBy(data, 'id'),
   };
   // 197kb
+  // console.log(sizeof(normalizedSchema));
 
   _.each(exchangeListSchema, (symbolIds, exchange) => {
     initOrderBookSocket(normalizedSchema, symbolIds, exchange);

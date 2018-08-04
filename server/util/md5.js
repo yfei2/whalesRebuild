@@ -21,9 +21,9 @@ const hexcase = 0; /* hex output format. 0 - lowercase; 1 - uppercase        */
  * to work around bugs in some JS interpreters.
  */
 function safeAdd(x, y) {
-  const lsw = (x & 0xFFFF) + (y & 0xFFFF);
+  const lsw = (x & 0xffff) + (y & 0xffff);
   const msw = (x >> 16) + (y >> 16) + (lsw >> 16);
-  return (msw << 16) | (lsw & 0xFFFF);
+  return (msw << 16) | (lsw & 0xffff);
 }
 
 /*
@@ -40,16 +40,16 @@ function md5Cmn(q, a, b, x, s, t) {
   return safeAdd(bitRol(safeAdd(safeAdd(a, q), safeAdd(x, t)), s), b);
 }
 function md5Ff(a, b, c, d, x, s, t) {
-  return md5Cmn((b & c) | ((~b) & d), a, b, x, s, t);
+  return md5Cmn((b & c) | (~b & d), a, b, x, s, t);
 }
 function md5Gg(a, b, c, d, x, s, t) {
-  return md5Cmn((b & d) | (c & (~d)), a, b, x, s, t);
+  return md5Cmn((b & d) | (c & ~d), a, b, x, s, t);
 }
 function md5Hh(a, b, c, d, x, s, t) {
   return md5Cmn(b ^ c ^ d, a, b, x, s, t);
 }
 function md5Ii(a, b, c, d, x, s, t) {
-  return md5Cmn(c ^ (b | (~d)), a, b, x, s, t);
+  return md5Cmn(c ^ (b | ~d), a, b, x, s, t);
 }
 
 /*
@@ -63,8 +63,7 @@ function rstr2hex(input) {
   // Hack... use i < input.length for full performance
   for (let i = 0; i < 5; i++) {
     x = input.charCodeAt(i);
-    output += hexTab.charAt((x >>> 4) & 0x0F)
-           + hexTab.charAt(x & 0x0F);
+    output += hexTab.charAt((x >>> 4) & 0x0f) + hexTab.charAt(x & 0x0f);
   }
   return output;
 }
@@ -83,25 +82,28 @@ function str2rstrUtf8(input) {
     /* Decode utf-16 surrogate pairs */
     x = input.charCodeAt(i);
     y = i + 1 < input.length ? input.charCodeAt(i + 1) : 0;
-    if (x >= 0xD800 && x <= 0xDBFF && y >= 0xDC00 && y <= 0xDFFF) {
-      x = 0x10000 + ((x & 0x03FF) << 10) + (y & 0x03FF);
+    if (x >= 0xd800 && x <= 0xdbff && y >= 0xdc00 && y <= 0xdfff) {
+      x = 0x10000 + ((x & 0x03ff) << 10) + (y & 0x03ff);
       i += 1;
     }
 
     /* Encode output as utf-8 */
-    if (x <= 0x7F) output += String.fromCharCode(x);
-    else if (x <= 0x7FF) {
-      output += String.fromCharCode(0xC0 | ((x >>> 6) & 0x1F),
-        0x80 | (x & 0x3F));
-    } else if (x <= 0xFFFF) {
-      output += String.fromCharCode(0xE0 | ((x >>> 12) & 0x0F),
-        0x80 | ((x >>> 6) & 0x3F),
-        0x80 | (x & 0x3F));
-    } else if (x <= 0x1FFFFF) {
-      output += String.fromCharCode(0xF0 | ((x >>> 18) & 0x07),
-        0x80 | ((x >>> 12) & 0x3F),
-        0x80 | ((x >>> 6) & 0x3F),
-        0x80 | (x & 0x3F));
+    if (x <= 0x7f) output += String.fromCharCode(x);
+    else if (x <= 0x7ff) {
+      output += String.fromCharCode(0xc0 | ((x >>> 6) & 0x1f), 0x80 | (x & 0x3f));
+    } else if (x <= 0xffff) {
+      output += String.fromCharCode(
+        0xe0 | ((x >>> 12) & 0x0f),
+        0x80 | ((x >>> 6) & 0x3f),
+        0x80 | (x & 0x3f),
+      );
+    } else if (x <= 0x1fffff) {
+      output += String.fromCharCode(
+        0xf0 | ((x >>> 18) & 0x07),
+        0x80 | ((x >>> 12) & 0x3f),
+        0x80 | ((x >>> 6) & 0x3f),
+        0x80 | (x & 0x3f),
+      );
     }
   }
   return output;
@@ -115,7 +117,7 @@ function rstr2binl(input) {
   const output = Array(input.length >> 2);
   for (let i = 0; i < output.length; i += 1) output[i] = 0;
   for (let i = 0; i < input.length * 8; i += 8) {
-    output[i >> 5] |= (input.charCodeAt(i / 8) & 0xFF) << (i % 32);
+    output[i >> 5] |= (input.charCodeAt(i / 8) & 0xff) << i % 32;
   }
   return output;
 }
@@ -126,7 +128,7 @@ function rstr2binl(input) {
 function binl2rstr(input) {
   let output = '';
   for (let i = 0; i < input.length * 32; i += 8) {
-    output += String.fromCharCode((input[i >> 5] >>> (i % 32)) & 0xFF);
+    output += String.fromCharCode((input[i >> 5] >>> i % 32) & 0xff);
   }
   return output;
 }
@@ -137,7 +139,7 @@ function binl2rstr(input) {
 function binlMd5(input, len) {
   const x = input;
   /* append padding */
-  x[len >> 5] |= 0x80 << ((len) % 32);
+  x[len >> 5] |= 0x80 << len % 32;
   x[(((len + 64) >>> 9) << 4) + 14] = len;
 
   let a = 1732584193;

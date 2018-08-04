@@ -90,15 +90,12 @@ exports.transformResponse = (response, exchangeName) => {
   }
 
   // Data post-proceesing
-  symbolData = _.map(
-    symbolData,
-    symbol => ({
-      ...symbol,
-      baseAsset: _.upperCase(symbol.baseAsset),
-      quoteAsset: _.upperCase(symbol.quoteAsset),
-      id: parseInt(symbol.id + hexMd5(symbol.symbol + symbol.exchange), 16),
-    }),
-  );
+  symbolData = _.map(symbolData, symbol => ({
+    ...symbol,
+    baseAsset: _.upperCase(symbol.baseAsset),
+    quoteAsset: _.upperCase(symbol.quoteAsset),
+    id: parseInt(symbol.id + hexMd5(symbol.symbol + symbol.exchange), 16),
+  }));
 
   return symbolData;
 };
