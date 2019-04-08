@@ -1,9 +1,11 @@
 FROM node:8-slim
-COPY --from=base /whalesRebuild /whalesRebuild
+COPY --from=yfei1/base /whalesRebuild /whalesRebuild
+
+RUN echo "#!/bin/sh\nncu -u\nnpm install\nnpm run dev" >> start.sh
+RUN chmod 777 start.sh
+
 WORKDIR /whalesRebuild
 RUN npm install -g npm-check-updates
 
-RUN echo "cd /whalesRebuild;ncu-u;npm install;npm run dev;" >> ~/start.sh
-RUN chmod 777 ~/start.sh
 
-ENTRYPOINT ["~/start.sh"]
+ENTRYPOINT ["/start.sh"]

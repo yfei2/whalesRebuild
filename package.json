@@ -38,7 +38,7 @@
     "concurrently": "^4.1.0",
     "immutable": "^3.8.2",
     "lodash": "^4.17.11",
-    "nodemon": "^1.18.10",
+    "nodemon": "^1.18.11",
     "normalizr": "^3.3.0",
     "pako": "^1.0.10",
     "react": "^16.8.6",
