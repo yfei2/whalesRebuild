@@ -1,0 +1,13 @@
+FROM node:8 as base
+
+ARG SSH_PRIVATE_KEY
+RUN mkdir /root/.ssh/
+RUN echo "${SSH_PRIVATE_KEY}" > /root/.ssh/id_rsa
+RUN chmod 400 /root/.ssh/id_rsa
+
+RUN touch /root/.ssh/known_hosts
+RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
+RUN git clone git@github.com:yfei1/whalesRebuild.git
+
+FROM scratch
+COPY --from=base /whalesRebuild /whalesRebuild

@@ -1,0 +1,9 @@
+FROM node:8-slim
+COPY --from=base /whalesRebuild /whalesRebuild
+WORKDIR /whalesRebuild
+RUN npm install -g npm-check-updates
+
+RUN echo "cd /whalesRebuild;ncu-u;npm install;npm run dev;" >> start.sh
+RUN chmod 777 ./start.sh
+
+ENTRYPOINT ["./initialize.sh"]
