@@ -3,3 +3,5 @@
 ncu -u
 
 npm install
+
+npm run dev
